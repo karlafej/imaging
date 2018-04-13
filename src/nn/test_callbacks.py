@@ -19,7 +19,8 @@ class PredictionsSaverCallback(Callback):
         files_name = kwargs['files_name']
         # Save the predictions
         for (pred, name) in zip(probs, files_name):
-            img_name = "".join([self.outpath, name])
+            name = name.split(".")[0]
+            img_name = "".join([self.outpath, name, ".png"])
             cv2.imwrite(img_name, pred)
            
         

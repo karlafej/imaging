@@ -1,3 +1,5 @@
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True # load big images
 import nn.classifier
 import nn.unet as unet
 import helpers
@@ -24,9 +26,9 @@ def main(part=None):
     helpers.clear_logs_folder()
 
     # Hyperparameters
-    img_resize = (800, 800)
+    img_resize = (700, 700)
     batch_size = 8
-    epochs = 6
+    epochs = 20
     threshold = 0.5 # default 0.5
     sample_size = None # Put None to work on full dataset
     

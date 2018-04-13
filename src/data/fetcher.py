@@ -20,7 +20,7 @@ class DatasetFetcher:
         self.train_masks_files = None
         self.csv = None
 
-    def get_dataset(self,datapath=datapath):
+    def get_dataset(self,datapath=datapath, prod=False, csv=None):
         """
         Downloads the dataset and return the input paths
         Args:
@@ -33,42 +33,47 @@ class DatasetFetcher:
             list: [train_data, test_data, train_masks_data]
 
         """
-       
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        destination_path = os.path.abspath(datapath)
-        prefix = ""
-       
-        datasets_path = [destination_path + "/train" + prefix, 
-                         destination_path + "/train_masks",
-                         destination_path + "/val" + prefix,
-                         destination_path + "/val_masks" + prefix,
-                         destination_path + "/test_all" + prefix,
-                         destination_path + "/data.csv"
-                         ]
-        is_datasets_present = True
-
-        # Check if all folders are present
-        for dir_path in datasets_path:
-            if not os.path.exists(dir_path):
-                is_datasets_present = False
-
-        if not is_datasets_present:
-                       print("Missing dataset")
+        if (prod & (csv is not None)):
+            destination_path = os.path.abspath(datapath)
+            self.test_data = destination_path
+            self.csv = pd.read_csv(csv)
+        
         else:
-            print("All datasets are present.")
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            destination_path = os.path.abspath(datapath)
+            prefix = ""
+       
+            datasets_path = [destination_path + "/train" + prefix, 
+                             destination_path + "/train_masks",
+                             destination_path + "/val" + prefix,
+                             destination_path + "/val_masks" + prefix,
+                             destination_path + "/test_all" + prefix,
+                             destination_path + "/data.csv"
+                            ]
+            is_datasets_present = True
 
-        self.train_data = datasets_path[0]
-        self.test_data = datasets_path[4]
-        self.train_masks_data = datasets_path[1]
-        self.val_data = datasets_path[2]
-        self.val_masks_data = datasets_path[3]
-        self.train_files = sorted(os.listdir(self.train_data))
-        self.test_files = sorted(os.listdir(self.test_data))
-        self.train_masks_files = sorted(os.listdir(self.train_masks_data))
-        self.val_files = sorted(os.listdir(self.val_data))
-        self.val_masks_files = sorted(os.listdir(self.val_masks_data))
-        self.csv = pd.read_csv(datasets_path[5])
-        return datasets_path
+            # Check if all folders are present
+            for dir_path in datasets_path:
+                if not os.path.exists(dir_path):
+                    is_datasets_present = False
+
+            if not is_datasets_present:
+                           print("Missing dataset")
+            else:
+                print("All datasets are present.")
+
+            self.train_data = datasets_path[0]
+            self.test_data = datasets_path[4]
+            self.train_masks_data = datasets_path[1]
+            self.val_data = datasets_path[2]
+            self.val_masks_data = datasets_path[3]
+            self.train_files = sorted(os.listdir(self.train_data))
+            self.test_files = sorted(os.listdir(self.test_data))
+            self.train_masks_files = sorted(os.listdir(self.train_masks_data))
+            self.val_files = sorted(os.listdir(self.val_data))
+            self.val_masks_files = sorted(os.listdir(self.val_masks_data))
+            self.csv = pd.read_csv(datasets_path[5])
+            return datasets_path
 
     def get_image_files(self, image_id, test_file=False, val_file=False, get_mask=False):
         if (get_mask & (not val_file)):
@@ -156,8 +161,15 @@ class DatasetFetcher:
         return [np.array(train_ret).ravel(), np.array(train_masks_ret).ravel(),
                 np.array(valid_ret).ravel(), np.array(valid_masks_ret).ravel()]
 
-    def get_test_files(self, sample_size, part=None):
-        if part:
+    def get_test_files(self, sample_size, part=None, prod=False):
+        if (prod & (part is not None)):
+            test_files = list(self.csv[(self.csv["ds"] == "test") & 
+                                       (self.csv["path"] == self.test_data) &
+                                       (self.csv["split"] == part)]["img"])
+        elif prod:
+            test_files = list(self.csv[(self.csv["ds"] == "test") &
+                                       (self.csv["path"] == self.test_data)]["img"])
+        elif part:
             test_files = list(self.csv[(self.csv["ds"] == "test") & 
                                        (self.csv["split"] == part)]["img"])
         else:    
