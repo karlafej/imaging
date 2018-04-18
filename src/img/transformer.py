@@ -16,6 +16,7 @@ def image_to_tensor(image):
     """
     image = image.astype(np.float32)
     #TODO: normalization
+    image = (image - 32.7197)/42.121
     # numpy image: H x W x C
     # torch image: C X H X W
     image = image.transpose((2, 0, 1))

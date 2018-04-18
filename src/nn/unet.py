@@ -12,8 +12,8 @@ class ConvBnRelu2d(nn.Module):
         super(ConvBnRelu2d, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride,
                               dilation=dilation, groups=groups, bias=False)
-        self.relu = nn.ReLU(inplace=True)
         self.bn = nn.BatchNorm2d(out_channels, eps=BN_EPS)
+        self.relu = nn.ReLU(inplace=True)
         if is_bn is False: self.bn = None
         if is_relu is False: self.relu = None
 

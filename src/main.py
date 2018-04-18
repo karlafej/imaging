@@ -28,7 +28,7 @@ def main(part=None):
     # Hyperparameters
     img_resize = (700, 700)
     batch_size = 8
-    epochs = 20
+    epochs = 10
     threshold = 0.5 # default 0.5
     sample_size = None # Put None to work on full dataset
     
