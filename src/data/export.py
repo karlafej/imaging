@@ -6,6 +6,8 @@ import re
 import numpy as np
 import helpers
 from tqdm import tqdm
+from multiprocessing import Pool
+from functools import partial
 
 def folders_in(path_to_parent):
     dir_path = Path(path_to_parent)
@@ -65,32 +67,36 @@ def create_dirs(dxa, predspath):
     outpath = str((pred/md/"predictions").absolute()) + "/"
     return maskpath, outpath
 
+def process_mask(mask, imgpath, maskpath, outpath, kernel):
+    maskfile = str(mask)
+    prefix = maskfile.split("/")[-1][:-4]
+    imgloc = "".join([imgpath, "/" ,prefix, ".bmp"])
+            
+    with open(imgloc, 'rb') as fi:
+        fi.seek(38)
+        header = fi.read(8)
+            
+    img = cv2.imread(imgloc,cv2.IMREAD_GRAYSCALE)
+    mask = cv2.imread(maskfile,cv2.IMREAD_GRAYSCALE)
+    mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
+    mask = cv2.dilate(mask, kernel, iterations = 2)
+    pred_masked = cv2.bitwise_and(img,img,mask = mask)
+    outfile = "".join([outpath, prefix, ".bmp"])
+    cv2.imwrite(outfile, pred_masked)
+                
+    with open(outfile, 'r+b') as fo:
+        fo.seek(38)
+        fo.write(header)      
+
 @helpers.st_time(show_func_name=False)
-def export_images(imgpath, maskpath, outpath):         
+def export_images(imgpath, maskpath, outpath, num_workers):         
     kernel = np.ones((2,2), np.uint8)
     masks = list(Path(maskpath).glob("*png"))
-    it_count = len(masks)
+    proc = partial(process_mask, imgpath=imgpath, maskpath=maskpath, outpath=outpath, kernel=kernel)
     
-    with tqdm(total=it_count, desc="Exporting") as pbar:
-        for m in masks:
-            maskfile = str(m)
-            prefix = maskfile.split("/")[-1][:-4]
-            imgloc = "".join([imgpath, "/" ,prefix, ".bmp"])
-            
-            with open(imgloc, 'rb') as fi:
-                fi.seek(38)
-                header = fi.read(8)
-            
-            img = cv2.imread(imgloc,cv2.IMREAD_GRAYSCALE)
-            mask = cv2.imread(maskfile,cv2.IMREAD_GRAYSCALE)
-            mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
-            mask = cv2.dilate(mask, kernel, iterations = 2)
-            pred_masked = cv2.bitwise_and(img,img,mask = mask)
-            outfile = "".join([outpath, prefix, ".bmp"])
-            cv2.imwrite(outfile, pred_masked)
-            
-            with open(outfile, 'r+b') as fo:
-                fo.seek(38)
-                fo.write(header)  
-                
-            pbar.update(1)
+    pool = Pool(processes=num_workers)
+    for _ in tqdm(pool.imap_unordered(proc, masks), total=len(masks), desc="Exporting"):
+        pass
+    pool.close()    
+    pool.join()        
+    

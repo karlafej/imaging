@@ -27,12 +27,12 @@ def main(argv):
     epochs = 15
     threshold = 0.3 # default 0.5
     sample_size = None # Put None to work on full dataset
-    modelfiles = {'middle': "model_middle_2018-04-03_22h34", 
+    modelfiles = {'middle': "model_middle_2018-04-17_14h37", 
               'start': "model_start_2018-04-03_11h16",
               'end': "model_end_2018-04-04_22h08" }
    
     # -- Optional parameters
-    threads = 2
+    threads = 10
     use_cuda = torch.cuda.is_available()
   
 
@@ -80,7 +80,7 @@ def main(argv):
                 pred_saver_cb = PredictionsSaverCallback(outpath=maskpath, threshold=threshold)
                 classifier.predict(test_loader, callbacks=[pred_saver_cb])
            
-        export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath)
+        export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
