@@ -28,13 +28,17 @@ def main(part=None):
     # Hyperparameters
     img_resize = (700, 700)
     batch_size = 8
-    epochs = 10
+    epochs = 4
     threshold = 0.5 # default 0.5
     sample_size = None # Put None to work on full dataset
+    if part:
+        modelfile = modelfiles[part]
     
     prefix = ""
     if part:
         prefix = part + "_"
+    
+    #modelfile = "model_male_end_2018-04-19_17h04"
     
    
     # -- Optional parameters
@@ -83,6 +87,8 @@ def main(part=None):
     print("Training on {} samples and validating on {} samples "
           .format(len(train_loader.dataset), len(valid_loader.dataset)))
 
+    if modelfile:
+        classifier.restore_model("".join([modelpath, modelfile]))
     
     classifier.train(train_loader, valid_loader, epochs,
                      callbacks=[tb_viz_cb, tb_logs_cb, model_saver_cb])
