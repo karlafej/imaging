@@ -1,6 +1,7 @@
 import numpy as np
 import torch.utils.data as data
 from PIL import Image
+import cv2
 
 import img.transformer as transformer
 
@@ -39,16 +40,20 @@ class TrainImageDataset(data.Dataset):
             Returns:
                 tuple: (image, target) where target is class_index of the target class.
         """
-        img = Image.open(self.X_train[index])
-        img = img.resize(self.img_resize, Image.ANTIALIAS)
-        img = transformer.center_cropping_resize(img, self.img_resize)
-        img = np.asarray(img.convert("RGB"), dtype=np.float32)
+        with open(self.X_train[index], 'rb') as f:
+            img = Image.open(f)
+        #img = Image.open(self.X_train[index])
+            img = img.resize(self.img_resize, Image.ANTIALIAS)
+            img = transformer.center_cropping_resize(img, self.img_resize)
+            img = np.asarray(img.convert("RGB"), dtype=np.float32)
 
         # Pillow reads gifs
-        mask = Image.open(self.y_train_masks[index])
-        mask = mask.resize(self.img_resize, Image.ANTIALIAS)
-        mask = transformer.center_cropping_resize(mask, self.img_resize)
-        mask = np.asarray(mask.convert("L"), dtype=np.float32)  # GreyScale
+        with open(self.y_train_masks[index], 'rb') as f:
+            mask = Image.open(f)
+        #mask = Image.open(self.y_train_masks[index])
+            mask = mask.resize(self.img_resize, Image.ANTIALIAS)
+            mask = transformer.center_cropping_resize(mask, self.img_resize)
+            mask = np.asarray(mask.convert("L"), dtype=np.float32)  # GreyScale
 
         if self.X_transform:
             img, mask = self.X_transform(img, mask)
@@ -85,12 +90,13 @@ class TestImageDataset(data.Dataset):
             tuple: (image, target) where target is class_index of the target class.
         """
         img_path = self.X_train[index]
-        img = Image.open(img_path)
-        img = img.resize(self.img_resize, Image.ANTIALIAS)
-        img = transformer.center_cropping_resize(img, self.img_resize)
-        img = np.asarray(img.convert("RGB"), dtype=np.float32)
-
-        img = transformer.image_to_tensor(img)
+        with open(img_path, 'rb') as f:  # strange pillow behavior with network drives...
+            img = Image.open(f)
+        #img = Image.open(img_path)
+            img = img.resize(self.img_resize, Image.ANTIALIAS)
+            img = transformer.center_cropping_resize(img, self.img_resize)
+            img = np.asarray(img.convert("RGB"), dtype=np.float32)
+            img = transformer.image_to_tensor(img)
         return img, img_path.split("/")[-1]
 
     def __len__(self):
