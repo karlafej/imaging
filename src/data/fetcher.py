@@ -83,7 +83,7 @@ class DatasetFetcher:
                 return self.train_masks_data + "/" + image_id + ".png"
             else:
                 print(image_id)
-                raise Exception("No mask with this ID found")
+                raise Exception("No mask with this ID found in train data")
         elif (get_mask & val_file):
             if image_id + "_mask.png" in self.val_masks_files:
                 return self.val_masks_data + "/" + image_id + "_mask.png"
@@ -91,7 +91,7 @@ class DatasetFetcher:
                 return self.val_masks_data + "/" + image_id + ".png"
             else:
                 print(image_id)
-                raise Exception("No mask with this ID found")
+                raise Exception("No mask with this ID found in val data")
         elif test_file:
             if image_id + ".png" in self.test_files:
                 return self.test_data + "/" + image_id + ".png"
@@ -101,7 +101,7 @@ class DatasetFetcher:
         else:
             if image_id + ".png" in self.train_files:
                 return self.train_data + "/" + image_id + ".png"
-        raise Exception("No image with this ID found")
+        raise Exception("No image with this ID found in test data")
 
     def get_image_matrix(self, image_path):
         img = Image.open(image_path)
@@ -165,7 +165,7 @@ class DatasetFetcher:
         if (prod & (part is not None)):
             test_files = list(self.csv[(self.csv["ds"] == "test") & 
                                        (self.csv["path"] == self.test_data) &
-                                       (self.csv["split"] == part)]["img"])
+                                       (self.csv["split"] == part)]["img"])         
         elif prod:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["path"] == self.test_data)]["img"])
