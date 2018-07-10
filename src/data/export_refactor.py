@@ -1,14 +1,30 @@
+from pathlib import Path
 import cv2
+import pandas as pd
 import os
 import re
-import subprocess
 import numpy as np
-import pandas as pd
+import helpers
 from tqdm import tqdm
 from multiprocessing import Pool
-from pathlib import Path
 from functools import partial
-import helpers
+
+class Dxa:
+    def __init__(self, inpath, predspath, mods=None, dxa=False):
+        self.inpath = inpath 
+        self.predspath = predspath
+        self.mods = mods
+        self.dxa = dxa
+
+    def create_dirs(self, where):
+        dirs = self.inpath.split('/')
+        md = '/'.join(dirs[where:])
+        pred = Path(self.predspath)
+        (pred/md/"masks").mkdir(parents=True, exist_ok=True)
+        (pred/md/"predictions").mkdir(parents=True, exist_ok=True)
+        self.maskpath = str((pred/md/"masks").absolute()) + "/"
+        self.outpath = str((pred/md/"predictions").absolute()) + "/"
+        return self.maskpath, self.outpath
 
 
 def folders_in(path_to_parent):
@@ -27,62 +43,41 @@ def get_DXA_lst(path_to_parent):
     else:
         folders = folders_in(path_to_parent)
         for folder in folders:
-            if "DXA" in folder:   #Mouse
-                DXA_lst.append(folder)
+            if "Rec" in folder:   #Mouse
+                DXA_lst.append(folder)  
                 where = -1
-    if DXA_lst == []: # Mice !takes several minutes on primus
+    if (DXA_lst == []): # Mice !takes several minutes on primus
         for folder in folders:
             subfolders = folders_in(folder)
             for subfolder in subfolders:
-                if "DXA" in subfolder:
+                if "Rec" in subfolder:
                     DXA_lst.append(subfolder)
                     where = -2
-    if DXA_lst == []:
-        DXA_lst.append(path_to_parent)
-        where = 0
-
     return DXA_lst, where
 
-def mouse_part(number, start=1000, end=1900):
-    if number < start:
-        return 'start'
-    elif number > end:
-        return 'end'
-    else: return 'middle'
+def mouse_part(number, start = 1000, end = 1900):
+        if number < start: return 'start'
+        elif number > end: return 'end'
+        else: return 'middle'
+        
+def mouse_part_st(number, start = 501, end = 1700):
+        if number < start: return 'st_start'
+        elif number > end: return 'st_end'
+        else: return 'st_middle'
 
-def mouse_part_st(number, start=501, end=1700):
-    if number < start: 
-        return 'st_start'
-    elif number > end: 
-        return 'st_end'
-    else: return 'st_middle'
-
-def create_csv(inpath, datapath, mods=None, rec=False):
-    if rec:
+def create_csv(inpath, datapath, mods=None, dxa=False):
+    if dxa:
         DXA_lst, where = [inpath], 0
     else:
         DXA_lst, where = get_DXA_lst(inpath)
     df = pd.DataFrame(columns=("path", "img"))
-    pattern = re.compile('.*?([0-9]+)$')
-    cmd = ('Rscript ../startend/startPosition.R'
-           ' --mode="classify" --model="../startend/model.csv"'
-           ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
-        # call an external script to find the first image:
-        inp = "".join([' --input="', dxa, '"'])
-        cmd_line = cmd + inp
-        proc = subprocess.run(cmd_line, stdout=subprocess.PIPE, shell=True)
-        filename = (str(proc.stdout, 'utf-8')).strip()
-        start = int(filename[-8:-4])
-        print(dxa.split('/')[-1], "- start at image number: ", start)
-        print("First image:", filename)
         tmpdf = pd.DataFrame()
-        tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
+        tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')] 
         tmpdf['path'] = dxa
-        tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
-        tmpdf = tmpdf.loc[tmpdf['number'] >= start]
         df = pd.concat([df, tmpdf])
-
+    pattern = re.compile('.*?([0-9]+)$')
+    df['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in df['img'])]
     df.dropna(inplace=True)
     df['ds'] = "test"
     if mods is not None:
@@ -90,14 +85,14 @@ def create_csv(inpath, datapath, mods=None, rec=False):
             df['split'] = df['number'].apply(lambda num: mouse_part_st(num))
         #df.loc[((df['img'].str.contains('_M_')) & (df['split'] == "end")), 'split'] = "male_end"
         #df.loc[((df['img'].str.contains('_F_')) & (df['split'] == "end")), 'split'] = "female_end"
-        else:
+        else:    
             df['split'] = df['number'].apply(lambda num: mouse_part(num))
             df.loc[((df['img'].str.contains('_M_')) & (df['split'] == "end")), 'split'] = "male_end"
             df.loc[((df['img'].str.contains('_F_')) & (df['split'] == "end")), 'split'] = "female_end"
     CSV = datapath + 'predict_data.csv'
     df.to_csv(CSV)
     return CSV, DXA_lst, where
-
+        
 def create_dirs(dxa, predspath, where):
     dirs = dxa.split('/')
     md = '/'.join(dirs[where:])
@@ -108,38 +103,39 @@ def create_dirs(dxa, predspath, where):
     outpath = str((pred/md/"predictions").absolute()) + "/"
     return maskpath, outpath
 
-def process_mask(mask, imgpath, outpath, kernel):
+def process_mask(mask, imgpath, maskpath, outpath, kernel):
     maskfile = str(mask)
     prefix = maskfile.split("/")[-1][:-4]
-    imgloc = "".join([imgpath, "/", prefix, ".bmp"])
-    imprefix = prefix[:-4] + '_' + prefix[-4:]
-
+    imgloc = "".join([imgpath, "/" ,prefix, ".bmp"])
+    imprefix = prefix[:-4] + '_' + prefix[-4:]      
+    
     with open(imgloc, 'rb') as fi:
         fi.seek(38)
         header = fi.read(8)
-
-    img = cv2.imread(imgloc, cv2.IMREAD_GRAYSCALE)
-    mask = cv2.imread(maskfile, cv2.IMREAD_GRAYSCALE)
+            
+    img = cv2.imread(imgloc,cv2.IMREAD_GRAYSCALE)
+    mask = cv2.imread(maskfile,cv2.IMREAD_GRAYSCALE)
     mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
     #mask = cv2.erode(mask, kernel, iterations = 1)
-    mask = cv2.dilate(mask, kernel, iterations=2)
-    pred_masked = cv2.bitwise_and(img, img, mask=mask)
+    mask = cv2.dilate(mask, kernel, iterations = 2)
+    pred_masked = cv2.bitwise_and(img,img,mask = mask)
     outfile = "".join([outpath, imprefix, ".bmp"])
     cv2.imwrite(outfile, pred_masked)
- 
+                
     with open(outfile, 'r+b') as fo:
         fo.seek(38)
         fo.write(header)
-
+        
 
 @helpers.st_time(show_func_name=False)
-def export_images(imgpath, maskpath, outpath, num_workers):
-    kernel = np.ones((2, 2), np.uint8)
+def export_images(imgpath, maskpath, outpath, num_workers):         
+    kernel = np.ones((2,2), np.uint8)
     masks = list(Path(maskpath).glob("*png"))
     proc = partial(process_mask, imgpath=imgpath, maskpath=maskpath, outpath=outpath, kernel=kernel)
-
+    
     pool = Pool(processes=num_workers)
     for _ in tqdm(pool.imap_unordered(proc, masks), total=len(masks), desc="Exporting"):
         pass
-    pool.close()
-    pool.join()
+    pool.close()    
+    pool.join()        
+    

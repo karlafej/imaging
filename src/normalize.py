@@ -7,26 +7,24 @@ from data.fetcher import DatasetFetcher
 from params import *
 
 import numpy as np
-import os
-import pdb
 
 
-
-def main(part=None):
-    
+def main():
+    part = None
     img_resize = (700, 700)
     batch_size = 64
     sample_size = None
     threads = 20
     threshold = 0.5
-    
+
     ds_fetcher = DatasetFetcher()
     ds_fetcher.get_dataset()
 
     # Get the path to the files for the neural net
-    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size, part=part)
+    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size,
+                                                                    part=part)
     full_x_test = ds_fetcher.get_test_files(sample_size=None, part=part)
-        
+
     train_ds = TrainImageDataset(X_train, y_train, img_resize)
     train_loader = DataLoader(train_ds, batch_size,
                               shuffle=True,
@@ -36,8 +34,8 @@ def main(part=None):
     valid_loader = DataLoader(valid_ds, batch_size,
                               shuffle=True,
                               num_workers=threads)
-    
-    
+
+
     print("Train dataset: {}, validation dataset: {} samples "
           .format(len(train_loader.dataset), len(valid_loader.dataset)))
 
@@ -48,18 +46,18 @@ def main(part=None):
     i_mask_pop_std0 = []
     i_mask_pop_std1 = []
     for i, (images, masks) in enumerate(valid_loader):
-        numpy_image = images.numpy()  
-        batch_mean = np.mean(numpy_image, axis=(0,2,3))
-        batch_std0 = np.std(numpy_image, axis=(0,2,3))
-        batch_std1 = np.std(numpy_image, axis=(0,2,3), ddof=1)
+        numpy_image = images.numpy()
+        batch_mean = np.mean(numpy_image, axis=(0, 2, 3))
+        batch_std0 = np.std(numpy_image, axis=(0, 2, 3))
+        batch_std1 = np.std(numpy_image, axis=(0, 2, 3), ddof=1)
         ipop_mean.append(batch_mean)
         ipop_std0.append(batch_std0)
         ipop_std1.append(batch_std1)
-        
+
         numpy_image = masks.numpy()
-        batch_mean = np.mean(numpy_image, axis=(0,1,2))
-        batch_std0 = np.std(numpy_image, axis=(0,1,2))
-        batch_std1 = np.std(numpy_image, axis=(0,1,2), ddof=1)
+        batch_mean = np.mean(numpy_image, axis=(0, 1, 2))
+        batch_std0 = np.std(numpy_image, axis=(0, 1, 2))
+        batch_std1 = np.std(numpy_image, axis=(0, 1, 2), ddof=1)
         i_mask_pop_mean.append(batch_mean)
         i_mask_pop_std0.append(batch_std0)
         i_mask_pop_std1.append(batch_std1)
@@ -88,18 +86,18 @@ def main(part=None):
     v_mask_pop_std0 = []
     v_mask_pop_std1 = []
     for i, (images, masks) in enumerate(valid_loader):
-        numpy_image = images.numpy()  
-        batch_mean = np.mean(numpy_image, axis=(0,2,3))
-        batch_std0 = np.std(numpy_image, axis=(0,2,3))
-        batch_std1 = np.std(numpy_image, axis=(0,2,3), ddof=1)
+        numpy_image = images.numpy()
+        batch_mean = np.mean(numpy_image, axis=(0, 2, 3))
+        batch_std0 = np.std(numpy_image, axis=(0, 2, 3))
+        batch_std1 = np.std(numpy_image, axis=(0, 2, 3), ddof=1)
         vpop_mean.append(batch_mean)
         vpop_std0.append(batch_std0)
         vpop_std1.append(batch_std1)
-        
+
         numpy_image = masks.numpy()
-        batch_mean = np.mean(numpy_image, axis=(0,1,2))
-        batch_std0 = np.std(numpy_image, axis=(0,1,2))
-        batch_std1 = np.std(numpy_image, axis=(0,1,2), ddof=1)
+        batch_mean = np.mean(numpy_image, axis=(0, 1, 2))
+        batch_std0 = np.std(numpy_image, axis=(0, 1, 2))
+        batch_std1 = np.std(numpy_image, axis=(0, 1, 2), ddof=1)
         v_mask_pop_mean.append(batch_mean)
         v_mask_pop_std0.append(batch_std0)
         v_mask_pop_std1.append(batch_std1)
@@ -120,7 +118,7 @@ def main(part=None):
     print("Mean:", v_mask_pop_mean.tolist())
     print("Standard deviation:", v_mask_pop_std0.tolist())
     print("Standard deviation (ddof=1):", v_mask_pop_std1.tolist())
-    
+
 if __name__ == "__main__":
     if mods:
         for part in mods:

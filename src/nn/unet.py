@@ -7,10 +7,12 @@ BN_EPS = 1e-4
 
 class ConvBnRelu2d(nn.Module):
     # batch norm after nonlinearity?
-    def __init__(self, in_channels, out_channels, kernel_size=3, padding=1, dilation=1, stride=1, groups=1, is_bn=True,
+    def __init__(self, in_channels, out_channels, kernel_size=3,
+                 padding=1, dilation=1, stride=1, groups=1, is_bn=True,
                  is_relu=True):
         super(ConvBnRelu2d, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride,
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
+                              padding=padding, stride=stride,
                               dilation=dilation, groups=groups, bias=False)
         self.bn = nn.BatchNorm2d(out_channels, eps=BN_EPS)
         self.relu = nn.ReLU(inplace=True)
@@ -23,7 +25,7 @@ class ConvBnRelu2d(nn.Module):
             x = self.relu(x)
         if self.bn is not None:
             x = self.bn(x)
-       
+
         return x
 
 
@@ -33,9 +35,11 @@ class StackEncoder(nn.Module):
         super(StackEncoder, self).__init__()
         padding = (kernel_size - 1) // 2
         self.encode = nn.Sequential(
-            ConvBnRelu2d(x_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1,
+            ConvBnRelu2d(x_channels, y_channels, kernel_size=kernel_size,
+                         padding=padding, dilation=1, stride=1,
                          groups=1),
-            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1,
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size,
+                         padding=padding, dilation=1, stride=1,
                          groups=1),
         )
 
@@ -51,12 +55,12 @@ class StackDecoder(nn.Module):
         padding = (kernel_size - 1) // 2
 
         self.decode = nn.Sequential(
-            ConvBnRelu2d(x_big_channels + x_channels, y_channels, kernel_size=kernel_size, padding=padding,
-                         dilation=1, stride=1, groups=1),
-            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1,
-                         groups=1),
-            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size, padding=padding, dilation=1, stride=1,
-                         groups=1),
+            ConvBnRelu2d(x_big_channels + x_channels, y_channels, kernel_size=kernel_size,
+                         padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size,
+                         padding=padding, dilation=1, stride=1, groups=1),
+            ConvBnRelu2d(y_channels, y_channels, kernel_size=kernel_size,
+                         padding=padding, dilation=1, stride=1, groups=1),
         )
 
     def forward(self, x_big, x):

@@ -29,11 +29,13 @@ def random_shift_scale_rotate(image, mask,
         box0 = box0.astype(np.float32)
         box1 = box1.astype(np.float32)
         mat = cv2.getPerspectiveTransform(box0, box1)
-        image = cv2.warpPerspective(image, mat, (width, height), flags=cv2.INTER_LINEAR, borderMode=borderMode,
+        image = cv2.warpPerspective(image, mat, (width, height),
+                                    flags=cv2.INTER_LINEAR, borderMode=borderMode,
                                     borderValue=(
                                         0, 0,
                                         0,))
-        mask = cv2.warpPerspective(mask, mat, (width, height), flags=cv2.INTER_LINEAR, borderMode=borderMode,
+        mask = cv2.warpPerspective(mask, mat, (width, height), flags=cv2.INTER_LINEAR,
+                                   borderMode=borderMode,
                                    borderValue=(
                                        0, 0,
                                        0,))

@@ -10,7 +10,7 @@ class PredictionsSaverCallback(Callback):
     def __init__(self, outpath, threshold):
         self.threshold = threshold
         self.outpath = outpath
-     
+
     def __call__(self, *args, **kwargs):
         if kwargs['step_name'] != "predict":
             return
@@ -22,5 +22,5 @@ class PredictionsSaverCallback(Callback):
             name = name.split(".")[0]
             img_name = "".join([self.outpath, name, ".png"])
             cv2.imwrite(img_name, pred)
-           
+
         

@@ -15,7 +15,7 @@ def image_to_tensor(image):
         tensor: A Pytorch tensor
     """
     image = image.astype(np.float32)
-    #TODO: normalization
+    # todo: normalization
     image = (image - 32.7197)/42.121
     # numpy image: H x W x C
     # torch image: C X H X W
@@ -62,3 +62,4 @@ def get_center_crop_size(img_path, img_size):
     new_h = np.round(np.multiply(img_size[0] / largest, img.size[0])).astype(int)
     new_w = np.round(np.multiply(img_size[1] / largest, img.size[1])).astype(int)
     return new_h, new_w
+    

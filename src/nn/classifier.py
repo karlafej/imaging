@@ -4,10 +4,9 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-import nn.tools as tools
 from tqdm import tqdm
 from collections import OrderedDict
-
+import nn.tools as tools
 import nn.losses as losses_utils
 import helpers
 
@@ -34,7 +33,7 @@ class ImgClassifier:
         """
         self.net.cuda()
         self.net.load_state_dict(torch.load(model_path))
-        
+
     def _criterion(self, logits, labels):
         l = losses_utils.BCELoss2d().forward(logits, labels) + losses_utils.SoftDiceLoss().forward(logits, labels)
         return l
@@ -141,7 +140,7 @@ class ImgClassifier:
                    epoch_id=self.epoch_counter + 1,
                    train_loss=train_loss, train_acc=train_acc,
                    val_loss=val_loss, val_acc=val_acc
-                   )
+                  )
         print("train_loss = {:03f}, train_acc = {:03f}\n"
               "val_loss   = {:03f}, val_acc   = {:03f}"
               .format(train_loss, train_acc, val_loss, val_acc))
@@ -166,7 +165,8 @@ class ImgClassifier:
         lr_scheduler = ReduceLROnPlateau(optimizer, 'min', patience=2, verbose=True, min_lr=1e-7)
 
         for epoch in range(epochs):
-            self._run_epoch(train_loader, valid_loader, optimizer, lr_scheduler, threshold, callbacks)
+            self._run_epoch(train_loader, valid_loader, optimizer,
+                            lr_scheduler, threshold, callbacks)
 
         # If there are callback call their __call__ method and pass in some arguments
         if callbacks:
@@ -174,7 +174,7 @@ class ImgClassifier:
                 cb(step_name="train",
                    net=self.net,
                    epoch_id=self.epoch_counter + 1,
-                   )
+                  )
 
     @helpers.st_time(show_func_name=False)
     def predict(self, test_loader, callbacks=None):
@@ -209,6 +209,6 @@ class ImgClassifier:
                            net=self.net,
                            probs=probs,
                            files_name=files_name
-                           )
+                          )
 
                 pbar.update(1)
