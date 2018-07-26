@@ -51,9 +51,9 @@ def mouse_part(number, start=1000, end=1900):
     else: return 'middle'
 
 def mouse_part_st(number, start=501, end=1700):
-    if number < start: 
+    if number < start:
         return 'st_start'
-    elif number > end: 
+    elif number > end:
         return 'st_end'
     else: return 'st_middle'
 
@@ -66,9 +66,9 @@ def create_csv(inpath, datapath, mods=None, rec=False):
     pattern = re.compile('.*?([0-9]+)$')
     scriptdir = str(Path(__file__).resolve().parent.parent)
     cmd = ('Rscript '
-            +scriptdir+'/startend/startPosition.R'+
-            ' --mode="classify" --model="../startend/model.csv"'
-            ' --p=0.3 --window=50 --paralell')
+           +scriptdir+'/startend/startPosition.R'+
+           ' --mode="classify" --model="../startend/model.csv"'
+           ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
         # call an external script to find the first image:
         inp = "".join([' --input="', dxa, '"'])
@@ -83,19 +83,21 @@ def create_csv(inpath, datapath, mods=None, rec=False):
         tmpdf['path'] = dxa
         tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
         tmpdf = tmpdf.loc[tmpdf['number'] >= start]
+        tmpdf.dropna(inplace=True)
+        if mods is not None:
+            if mods[0].startswith("st_"):
+                tmpdf['split'] = tmpdf['number'].apply(lambda num: mouse_part_st(num))
+                #tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                #tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
+            else:
+                tmpdf['split'] = tmpdf['number'].apply(lambda num: mouse_part(num, 
+                                                                              start=start+400, 
+                                                                              end=start+1300))
+                tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
         df = pd.concat([df, tmpdf])
 
-    df.dropna(inplace=True)
     df['ds'] = "test"
-    if mods is not None:
-        if mods[0].startswith("st_"):
-            df['split'] = df['number'].apply(lambda num: mouse_part_st(num))
-        #df.loc[((df['img'].str.contains('_M_')) & (df['split'] == "end")), 'split'] = "male_end"
-        #df.loc[((df['img'].str.contains('_F_')) & (df['split'] == "end")), 'split'] = "female_end"
-        else:
-            df['split'] = df['number'].apply(lambda num: mouse_part(num))
-            df.loc[((df['img'].str.contains('_M_')) & (df['split'] == "end")), 'split'] = "male_end"
-            df.loc[((df['img'].str.contains('_F_')) & (df['split'] == "end")), 'split'] = "female_end"
     CSV = datapath + 'predict_data.csv'
     df.to_csv(CSV)
     return CSV, DXA_lst, where
@@ -128,11 +130,10 @@ def process_mask(mask, imgpath, outpath, kernel):
     pred_masked = cv2.bitwise_and(img, img, mask=mask)
     outfile = "".join([outpath, imprefix, ".bmp"])
     cv2.imwrite(outfile, pred_masked)
- 
+
     with open(outfile, 'r+b') as fo:
         fo.seek(38)
         fo.write(header)
-
 
 @helpers.st_time(show_func_name=False)
 def export_images(imgpath, maskpath, outpath, num_workers):
