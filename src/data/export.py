@@ -64,9 +64,11 @@ def create_csv(inpath, datapath, mods=None, rec=False):
         DXA_lst, where = get_DXA_lst(inpath)
     df = pd.DataFrame(columns=("path", "img"))
     pattern = re.compile('.*?([0-9]+)$')
-    cmd = ('Rscript ../startend/startPosition.R'
-           ' --mode="classify" --model="../startend/model.csv"'
-           ' --p=0.3 --window=50 --paralell')
+    scriptdir = str(Path(__file__).resolve().parent.parent)
+    cmd = ('Rscript '
+            +scriptdir+'/startend/startPosition.R'+
+            ' --mode="classify" --model="../startend/model.csv"'
+          c  ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
         # call an external script to find the first image:
         inp = "".join([' --input="', dxa, '"'])
