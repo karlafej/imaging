@@ -68,7 +68,7 @@ def create_csv(inpath, datapath, mods=None, rec=False):
     cmd = ('Rscript '
             +scriptdir+'/startend/startPosition.R'+
             ' --mode="classify" --model="../startend/model.csv"'
-          c  ' --p=0.3 --window=50 --paralell')
+            ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
         # call an external script to find the first image:
         inp = "".join([' --input="', dxa, '"'])
