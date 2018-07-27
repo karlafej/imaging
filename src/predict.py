@@ -5,6 +5,8 @@ from PIL import ImageFile
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SequentialSampler
+from pathlib import Path
+from datetime import date
 
 import nn.classifier
 import nn.unet as unet
@@ -99,6 +101,11 @@ def main(argv):
                     classifier.predict(test_loader, callbacks=[pred_saver_cb])
 
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
+
+        out = Path(outpahth)
+        fname = dxa.split('/')[-1] + '.log'
+        logfile = out/fname
+        logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(modelfiles))
 
     print("*** FINISHED ***")
 
