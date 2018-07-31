@@ -64,7 +64,7 @@ def create_csv(inpath, datapath, mods=None, rec=False):
         DXA_lst, where = get_DXA_lst(inpath)
     df = pd.DataFrame(columns=("path", "img"))
     pattern = re.compile('.*?([0-9]+)$')
-    scriptdir = str(Path(__file__).resolve().parent.parent)
+    scriptdir = str(Path(__file__).resolve().parent.parent.parent)
     cmd = ('Rscript '
            +scriptdir+'/startend/startPosition.R'+
            ' --mode="classify" --model="../startend/model.csv"'

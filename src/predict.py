@@ -44,6 +44,7 @@ def main(argv):
     stretched = False
     dxa = False
     output = None
+    rec = False
     for opt, arg in opts:
         if opt == '-h':
             print('argv[0] -i <inputpath>')
