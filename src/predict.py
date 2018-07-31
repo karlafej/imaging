@@ -103,7 +103,7 @@ def main(argv):
 
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 
-        out = Path(outpahth)
+        out = Path(outpath)
         fname = dxa.split('/')[-1] + '.log'
         logfile = out/fname
         logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(modelfiles))
