@@ -81,8 +81,10 @@ def create_csv(inpath, datapath, mods=None, rec=False):
         filename = (str(proc.stdout, 'utf-8')).strip()
         try:
             start = int(filename[-8:-4])
-        except(ValueError):
+            n_st = 400
+        except ValueError:
             start = tmpdf['number'].min()
+            n_st = (1000 - start) if start < 1000 else 0
         print(dxa.split('/')[-1], "- start at image number: ", start)
         print("First image:", filename)
         tmpdf = pd.DataFrame()
@@ -97,7 +99,9 @@ def create_csv(inpath, datapath, mods=None, rec=False):
                 #tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
                 #tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
             else:
-                tmpdf['split'] = tmpdf['number'].apply(mouse_part, start=start+400, end=start+1300)
+                tmpdf['split'] = tmpdf['number'].apply(mouse_part,
+                                                       start=start+n_st,
+                                                       end=start+n_st+900)
                 tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
                 tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
         df = pd.concat([df, tmpdf])
