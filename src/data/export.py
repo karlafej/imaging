@@ -70,12 +70,19 @@ def create_csv(inpath, datapath, mods=None, rec=False):
            ' --mode="classify" --model="../startend/model.csv"'
            ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
+        tmpdf = pd.DataFrame()
+        tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
+        tmpdf['path'] = dxa
+        tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
         # call an external script to find the first image:
         inp = "".join([' --input="', dxa, '"'])
         cmd_line = cmd + inp
         proc = subprocess.run(cmd_line, stdout=subprocess.PIPE, shell=True)
         filename = (str(proc.stdout, 'utf-8')).strip()
-        start = int(filename[-8:-4])
+        try:
+            start = int(filename[-8:-4])
+        except(ValueError):
+            start = tmpdf['number'].min()
         print(dxa.split('/')[-1], "- start at image number: ", start)
         print("First image:", filename)
         tmpdf = pd.DataFrame()
