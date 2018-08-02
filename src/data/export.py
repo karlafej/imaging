@@ -122,14 +122,14 @@ def create_csv(inpath, datapath, mods=None, rec=False):
         if mods is not None:
             if mods[0].startswith("st_"):
                 tmpdf['split'] = tmpdf['number'].apply(mouse_part_st)
-                #tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
-                #tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
+                #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
             else:
                 tmpdf['split'] = tmpdf['number'].apply(mouse_part,
                                                        start=start+n_st,
                                                        end=start+n_st+900)
-                tmpdf.loc[((tmpdf['img'].str.contains('_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
-                tmpdf.loc[((tmpdf['img'].str.contains('_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
+                tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
         df = pd.concat([df, tmpdf])
 
     df['ds'] = "test"
