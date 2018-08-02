@@ -22,5 +22,4 @@ class PredictionsSaverCallback(Callback):
             name = name.split(".")[0]
             img_name = "".join([self.outpath, name, ".png"])
             cv2.imwrite(img_name, pred)
-
         

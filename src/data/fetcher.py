@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 from PIL import Image
-from sklearn.model_selection import train_test_split
 from params import datapath
 import pandas as pd
 
@@ -19,31 +18,35 @@ class DatasetFetcher:
         self.test_files = None
         self.train_masks_files = None
         self.csv = None
+        self.val_data = None
+        self.val_masks_data = None
+        self.val_files = None
+        self.val_masks_files = None
 
-    def get_dataset(self,datapath=datapath, prod=False, csv=None):
+    def get_dataset(self, data_path=datapath, prod=False, csv=None):
         """
         Downloads the dataset and return the input paths
         Args:
-            datapath : path to datasets
-        Datasets should be located in directories datapath/train, datapath/train_masks,
-        datapath/val, datapath/val_masks
-        datapath/test
+            data_path : path to datasets
+        Datasets should be located in directories data_path/train, data_path/train_masks,
+        data_path/val, data_path/val_masks
+        data_path/test
 
         Returns:
             list: [train_data, test_data, train_masks_data]
 
         """
-        if (prod & (csv is not None)):
-            destination_path = os.path.abspath(datapath)
+        if prod & (csv is not None):
+            destination_path = os.path.abspath(data_path)
             self.test_data = destination_path
             self.csv = pd.read_csv(csv)
-        
+
         else:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            destination_path = os.path.abspath(datapath)
+            #script_dir = os.path.dirname(os.path.abspath(__file__))
+            destination_path = os.path.abspath(data_path)
             prefix = ""
-       
-            datasets_path = [destination_path + "/train" + prefix, 
+
+            datasets_path = [destination_path + "/train" + prefix,
                              destination_path + "/train_masks",
                              destination_path + "/val" + prefix,
                              destination_path + "/val_masks" + prefix,
@@ -58,7 +61,7 @@ class DatasetFetcher:
                     is_datasets_present = False
 
             if not is_datasets_present:
-                           print("Missing dataset")
+                print("Missing dataset")
             else:
                 print("All datasets are present.")
 
@@ -76,7 +79,7 @@ class DatasetFetcher:
             return datasets_path
 
     def get_image_files(self, image_id, test_file=False, val_file=False, get_mask=False):
-        if (get_mask & (not val_file)):
+        if get_mask & (not val_file):
             if image_id + "_mask.png" in self.train_masks_files:
                 return self.train_masks_data + "/" + image_id + "_mask.png"
             elif image_id + ".png" in self.train_masks_files:
@@ -84,7 +87,7 @@ class DatasetFetcher:
             else:
                 print(image_id)
                 raise Exception("No mask with this ID found in train data")
-        elif (get_mask & val_file):
+        elif get_mask & val_file:
             if image_id + "_mask.png" in self.val_masks_files:
                 return self.val_masks_data + "/" + image_id + "_mask.png"
             elif image_id + ".png" in self.val_masks_files:
@@ -126,8 +129,8 @@ class DatasetFetcher:
         """
 
         if part:
-            train_ids = list(self.csv[(self.csv["ds"] == "train") & (self.csv["split"] ==                                                part)]["img"].str.split(".").str[0])
-            val_ids = list(self.csv[(self.csv["ds"] == "val") & (self.csv["split"] ==                                                part)]["img"].str.split(".").str[0])
+            train_ids = list(self.csv[(self.csv["ds"] == "train") & (self.csv["split"] == part)]["img"].str.split(".").str[0])
+            val_ids = list(self.csv[(self.csv["ds"] == "val") & (self.csv["split"] == part)]["img"].str.split(".").str[0])
         # the val column is redundant... could be found from self.val_files
         # list(set(self.val_files).intersection(list(self.csv[...]))
         else:
@@ -135,12 +138,12 @@ class DatasetFetcher:
             val_ids = list(map(lambda img: img.split(".")[0], self.val_files))
             #train_ids = list(self.csv[(self.csv["ds"] == "train")]["img"].str.split(".").str[0])
             #val_ids = list(self.csv[(self.csv["ds"] == "val")]["img"].str.split(".").str[0])
-                                    
+      
 
         if sample_size:
             rnd = np.random.choice(train_ids, int(len(train_ids) * sample_size))
             train_ids = rnd.ravel()
-            rnd =  np.random.choice(val_ids, int(len(val_ids) * sample_size))
+            rnd = np.random.choice(val_ids, int(len(val_ids) * sample_size))
             val_ids = rnd.ravel()
 
         train_ret = []
@@ -148,31 +151,31 @@ class DatasetFetcher:
         valid_ret = []
         valid_masks_ret = []
 
-        for id in train_ids:
-            if len(id)>3:
-                train_ret.append(self.get_image_files(id))
-                train_masks_ret.append(self.get_image_files(id, get_mask=True))
+        for idx in train_ids:
+            if len(idx) > 3:
+                train_ret.append(self.get_image_files(idx))
+                train_masks_ret.append(self.get_image_files(idx, get_mask=True))
 
-        for id in val_ids:
-            if len(id)>3:
-                valid_ret.append(self.get_image_files(id, val_file=True))
-                valid_masks_ret.append(self.get_image_files(id, val_file=True, get_mask=True))
+        for idx in val_ids:
+            if len(idx) > 3:
+                valid_ret.append(self.get_image_files(idx, val_file=True))
+                valid_masks_ret.append(self.get_image_files(idx, val_file=True, get_mask=True))
 
         return [np.array(train_ret).ravel(), np.array(train_masks_ret).ravel(),
                 np.array(valid_ret).ravel(), np.array(valid_masks_ret).ravel()]
 
     def get_test_files(self, sample_size, part=None, prod=False):
-        if (prod & (part is not None)):
-            test_files = list(self.csv[(self.csv["ds"] == "test") & 
+        if prod & (part is not None):
+            test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["path"] == self.test_data) &
-                                       (self.csv["split"] == part)]["img"])         
+                                       (self.csv["split"] == part)]["img"])     
         elif prod:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["path"] == self.test_data)]["img"])
         elif part:
-            test_files = list(self.csv[(self.csv["ds"] == "test") & 
+            test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["split"] == part)]["img"])
-        else:    
+        else:
             test_files = self.test_files
 
         if sample_size:

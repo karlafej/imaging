@@ -12,6 +12,9 @@ import helpers
 
 
 def folders_in(path_to_parent):
+    '''
+    list subfolders
+    '''
     dir_path = Path(path_to_parent)
     if dir_path.is_dir():
         folders = list(str(x) for x in dir_path.iterdir() if x.is_dir())
@@ -20,6 +23,11 @@ def folders_in(path_to_parent):
     return folders
 
 def get_DXA_lst(path_to_parent):
+    '''
+    find all folders to process
+
+    returns folders' names and location flag
+    '''
     DXA_lst = []
     if "DXA" in path_to_parent: #DXA
         DXA_lst.append(path_to_parent)
@@ -44,6 +52,12 @@ def get_DXA_lst(path_to_parent):
     return DXA_lst, where
 
 def mouse_part(number, start=1000, end=1900):
+    '''
+    split image list
+
+    input: image number, limits
+    output: name of the mouse part to use with the appropriate model
+    '''
     if number < start:
         return 'start'
     elif number > end:
@@ -51,6 +65,12 @@ def mouse_part(number, start=1000, end=1900):
     else: return 'middle'
 
 def mouse_part_st(number, start=501, end=1700):
+    '''
+    split image list
+
+    input: image number, limits
+    output: name of the mouse part to use with the appropriate model
+    '''
     if number < start:
         return 'st_start'
     elif number > end:
@@ -58,6 +78,12 @@ def mouse_part_st(number, start=501, end=1700):
     else: return 'st_middle'
 
 def create_csv(inpath, datapath, mods=None, rec=False):
+    '''
+    create csv with image names, paths, numbers, split modifiers
+    and save it in the datapath folder
+
+    output: path to the CSV file, and list of folders to process
+    '''
     if rec:
         DXA_lst, where = [inpath], 0
     else:
@@ -112,6 +138,9 @@ def create_csv(inpath, datapath, mods=None, rec=False):
     return CSV, DXA_lst, where
 
 def create_dirs(dxa, predspath, where):
+    '''
+    create directory structure to put the output files in
+    '''
     dirs = dxa.split('/')
     md = '/'.join(dirs[where:])
     pred = Path(predspath)
@@ -122,6 +151,10 @@ def create_dirs(dxa, predspath, where):
     return maskpath, outpath
 
 def process_mask(mask, imgpath, outpath, kernel):
+    '''
+    use the predicted mask on the original image and
+    save the resulting file
+    '''
     maskfile = str(mask)
     prefix = maskfile.split("/")[-1][:-4]
     imgloc = "".join([imgpath, "/", prefix, ".bmp"])
@@ -146,9 +179,12 @@ def process_mask(mask, imgpath, outpath, kernel):
 
 @helpers.st_time(show_func_name=False)
 def export_images(imgpath, maskpath, outpath, num_workers):
+    '''
+    process all images
+    '''
     kernel = np.ones((2, 2), np.uint8)
     masks = list(Path(maskpath).glob("*png"))
-    proc = partial(process_mask, imgpath=imgpath, maskpath=maskpath, outpath=outpath, kernel=kernel)
+    proc = partial(process_mask, imgpath=imgpath, outpath=outpath, kernel=kernel)
 
     pool = Pool(processes=num_workers)
     for _ in tqdm(pool.imap_unordered(proc, masks), total=len(masks), desc="Exporting"):

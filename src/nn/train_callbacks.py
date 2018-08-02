@@ -73,7 +73,7 @@ class TensorboardVisualizerCallback(Callback):
         last_images, last_targets, last_preds = kwargs['last_val_batch']
         writer = SummaryWriter(self.path_to_files)
 
-        for i, (image, target_mask, pred_mask) in enumerate(zip(last_images, 
+        for i, (image, target_mask, pred_mask) in enumerate(zip(last_images,
                                                                 last_targets, last_preds)):
 
             image = image.data.float().cpu().numpy().astype(np.uint8)
