@@ -81,7 +81,7 @@ def main(argv):
 
                 modelfile = modelfiles[part]
                 ds_fetcher = DatasetFetcher()
-                ds_fetcher.get_dataset(datapath=dxa, csv=CSV, prod=True)
+                ds_fetcher.get_dataset(data_path=dxa, csv=CSV, prod=True)
                 full_x_test = ds_fetcher.get_test_files(sample_size=None, part=part, prod=True)
                 if full_x_test.size != 0:
                     print(part)
