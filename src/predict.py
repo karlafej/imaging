@@ -106,7 +106,7 @@ def main(argv):
         out = Path(outpath)
         fname = dxa.split('/')[-1] + '.log'
         logfile = out/fname
-        logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(modelfiles))
+        logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(list(modelfiles.values()))
 
     print("*** FINISHED ***")
 
