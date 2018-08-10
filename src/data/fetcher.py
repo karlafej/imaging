@@ -50,7 +50,7 @@ class DatasetFetcher:
                              destination_path + "/train_masks",
                              destination_path + "/val" + prefix,
                              destination_path + "/val_masks" + prefix,
-                             destination_path + "/test_all" + prefix,
+                             destination_path + "/test" + prefix,
                              destination_path + "/data.csv"
                             ]
             is_datasets_present = True

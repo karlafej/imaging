@@ -130,7 +130,7 @@ def create_csv(inpath, datapath, mods=None, rec=False):
                                                        end=start+n_st+900)
                 tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
                 tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
-        df = pd.concat([df, tmpdf])
+        df = pd.concat([df, tmpdf], sort=True)
 
     df['ds'] = "test"
     CSV = datapath + 'predict_data.csv'
