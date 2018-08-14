@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class BCELoss2d(nn.Module):
     def __init__(self, weight=None, reduction='elementwise_mean'):
         super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCELoss(weight, reduction)
+        self.bce_loss = nn.BCELoss(weight, reduction='elementwise_mean')
 
     def forward(self, logits, targets):
         probs = torch.sigmoid(logits)
