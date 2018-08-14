@@ -54,20 +54,20 @@ class ImgClassifier:
                     images = images.cuda()
                     targets = targets.cuda()
 
-                # Volatile because we are in pure inference mode
-                # http://pytorch.org/docs/master/notes/autograd.html#volatile
-                images = Variable(images, volatile=True)
-                targets = Variable(targets, volatile=True)
+                # Pure inference mode
+                with torch.no_grad():
+                    images = images
+                    targets = targets
 
                 # forward
                 logits = self.net(images)
-                probs = F.sigmoid(logits)
+                probs = torch.sigmoid(logits)
                 preds = (probs > threshold).float()
 
                 loss = self._criterion(logits, targets)
                 acc = losses_utils.dice_coeff(preds, targets)
-                losses.update(loss.data[0], batch_size)
-                dice_coeffs.update(acc.data[0], batch_size)
+                losses.update(loss.data.item(), batch_size)
+                dice_coeffs.update(acc.data.item(), batch_size)
                 pbar.update(1)
 
         return losses.avg, dice_coeffs.avg, images, targets, preds
@@ -92,7 +92,7 @@ class ImgClassifier:
 
                 # forward
                 logits = self.net.forward(inputs)
-                probs = F.sigmoid(logits)
+                probs = torch.sigmoid(logits)
                 pred = (probs > threshold).float()
 
                 # backward + optimize
@@ -104,12 +104,12 @@ class ImgClassifier:
                 # print statistics
                 acc = losses_utils.dice_coeff(pred, target)
 
-                losses.update(loss.data[0], batch_size)
-                dice_coeffs.update(acc.data[0], batch_size)
+                losses.update(loss.data.item(), batch_size)
+                dice_coeffs.update(acc.data.item(), batch_size)
 
                 # Update pbar
-                pbar.set_postfix(OrderedDict(loss='{0:1.5f}'.format(loss.data[0]),
-                                             dice_coeff='{0:1.5f}'.format(acc.data[0])))
+                pbar.set_postfix(OrderedDict(loss='{0:1.5f}'.format(loss.data.item()),
+                                             dice_coeff='{0:1.5f}'.format(acc.data.item())))
                 pbar.update(1)
         return losses.avg, dice_coeffs.avg
 
@@ -195,11 +195,14 @@ class ImgClassifier:
                 if self.use_cuda:
                     images = images.cuda()
 
-                images = Variable(images, volatile=True)
+
+                with torch.no_grad():
+                    images = images
+               
 
                 # forward
                 logits = self.net(images)
-                probs = F.sigmoid(logits)
+                probs = torch.sigmoid(logits)
                 probs = probs.data.cpu().numpy()
 
                 # If there are callback call their __call__ method and pass in some arguments
