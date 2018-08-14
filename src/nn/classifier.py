@@ -56,15 +56,12 @@ class ImgClassifier:
 
                 # Pure inference mode
                 with torch.no_grad():
-                    images = images
-                    targets = targets
-
                 # forward
-                logits = self.net(images)
-                probs = torch.sigmoid(logits)
-                preds = (probs > threshold).float()
+                    logits = self.net(images)
+                    probs = torch.sigmoid(logits)
+                    preds = (probs > threshold).float()
+                    loss = self._criterion(logits, targets)
 
-                loss = self._criterion(logits, targets)
                 acc = losses_utils.dice_coeff(preds, targets)
                 losses.update(loss.data.item(), batch_size)
                 dice_coeffs.update(acc.data.item(), batch_size)
@@ -195,15 +192,11 @@ class ImgClassifier:
                 if self.use_cuda:
                     images = images.cuda()
 
-
                 with torch.no_grad():
-                    images = images
-               
-
                 # forward
-                logits = self.net(images)
-                probs = torch.sigmoid(logits)
-                probs = probs.data.cpu().numpy()
+                    logits = self.net(images)
+                    probs = torch.sigmoid(logits)
+                    probs = probs.data.cpu().numpy()
 
                 # If there are callback call their __call__ method and pass in some arguments
                 if callbacks:
