@@ -13,7 +13,7 @@ import nn.unet as unet
 from nn.test_callbacks import PredictionsSaverCallback
 from data.fetcher import DatasetFetcher
 from data.dataset import TestImageDataset
-from data.export import create_csv, create_dirs, export_images
+from data.export import create_csv, create_dirs, export_images, get_DXA_lst
 import img.transformer as transformer
 from params import modelfiles, modelpath, datapath
 
@@ -37,35 +37,53 @@ def main(argv):
 
 
     try:
-        opts, args = getopt.getopt(argv, "hi:o:sd", ["input=", "output="])
+        opts, args = getopt.getopt(argv, "hi:o:c:sdr", ["input=", "output=", "csv=", "rec"])
     except getopt.GetoptError:
         print ('argv[0] -i <inputpath> -s')
         sys.exit(2)
     stretched = False
-    dxa = False
     output = None
     rec = False
+    dirname = "DXA"
+    csvfile = None
+
     for opt, arg in opts:
         if opt == '-h':
             print('argv[0] -i <inputpath>')
             sys.exit()
         elif opt in ("-i", "--input"):
             inpath = arg
+        elif opt in ("-c", "--csv"):
+            csvfile = arg 
         elif opt in ("-s", "--str"):
             stretched = True
         elif opt in ("-d", "--dxa"):
             rec = True
         elif opt in ("-o", "--output"):
             output = arg
+        elif opt in ("-r", "--rec"):
+            dirname = "Rec" 
 
+    #print(inpath)
+    #print(csvfile)
+    #print(rec)
+    #print(dirname)   
 
     if stretched:
         mods = ["st_start", "st_middle", "st_end"]
     else:
         mods = ["start", "middle", "male_end", "female_end"]
 
+    if rec:
+        dxa_lst, where = [inpath], 0
+    else:
+        dxa_lst, where = get_DXA_lst(inpath, dirname=dirname)   
+
     if mods: # but mods are everytime!
-        CSV, dxa_lst, where = create_csv(inpath, datapath, mods=mods, rec=rec)
+        if csvfile is not None:
+            CSV = csvfile   
+        else:
+            CSV = create_csv(datapath, DXA_lst=dxa_lst, mods=mods)
 
     if output is not None:
         predspath = output
