@@ -108,7 +108,7 @@ def create_csv(datapath, DXA_lst, mods=None):
         except ValueError:
             start = tmpdf['number'].min()
             n_st = (1000 - start) if start < 1000 else 0
-        print(dxa.split('/')[-1], "- start at image number: ", start) ##########################
+        print(Path(dxa).name, "- start at image number: ", start) 
         print("First image:", filename)
         tmpdf = pd.DataFrame()
         tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
