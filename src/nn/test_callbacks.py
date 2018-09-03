@@ -21,7 +21,7 @@ class PredictionsSaverCallback(Callback):
         # Save the predictions
         for (pred, name) in zip(probs, files_name):
             name = name.split(".")[0]
-            img_name = "".join([self.outpath, name, ".bmp"])
+            img_name = str(self.outpath/(name + ".bmp"))
             mask = pred > self.threshold
             mask = np.array(mask, dtype=np.uint8)
             cv2.imwrite(img_name, mask)
