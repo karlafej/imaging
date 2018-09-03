@@ -118,11 +118,12 @@ def main(argv):
 
                     pred_saver_cb = PredictionsSaverCallback(outpath=maskpath, threshold=threshold)
                     classifier.predict(test_loader, callbacks=[pred_saver_cb])
-
+        
+        dxa = Path(dxa)
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 
         out = Path(outpath)
-        fname = dxa.split('/')[-1] + '.log'
+        fname = dxa.name + '.log'
         logfile = out/fname
         logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(list(modelfiles.values())))
 
