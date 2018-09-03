@@ -1,9 +1,11 @@
 import os
 
 import numpy as np
+import pandas as pd
+from pathlib import Path
 from PIL import Image
 from params import datapath
-import pandas as pd
+
 
 class DatasetFetcher:
     def __init__(self):
@@ -165,13 +167,15 @@ class DatasetFetcher:
                 np.array(valid_ret).ravel(), np.array(valid_masks_ret).ravel()]
 
     def get_test_files(self, sample_size, part=None, prod=False):
+        self.csv["pathlb"] = self.csv["path"].apply(lambda p: Path(p))
+        path_now = Path(self.test_data)
         if prod & (part is not None):
             test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                       (self.csv["path"] == self.test_data) &
-                                       (self.csv["split"] == part)]["img"])     
+                                       (self.csv["pathlb"] == path_now) &
+                                       (self.csv["split"] == part)]["img"])  
         elif prod:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                       (self.csv["path"] == self.test_data)]["img"])
+                                       (self.csv["pathlb"] == path_now)]["img"])
         elif part:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["split"] == part)]["img"])

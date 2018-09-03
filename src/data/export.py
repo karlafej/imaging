@@ -173,6 +173,9 @@ def process_mask(mask, imgpath, outpath, kernel):
     with open(outfile, 'r+b') as fo:
         fo.seek(38)
         fo.write(header)
+    with open(maskfile, 'r+b') as fo:
+        fo.seek(38)
+        fo.write(header)
 
 @helpers.st_time(show_func_name=False)
 def export_images(imgpath, maskpath, outpath, num_workers):
@@ -180,7 +183,7 @@ def export_images(imgpath, maskpath, outpath, num_workers):
     process all images
     '''
     kernel = np.ones((2, 2), np.uint8)
-    masks = list(Path(maskpath).glob("*png"))
+    masks = list(Path(maskpath).glob("*bmp"))
     proc = partial(process_mask, imgpath=imgpath, outpath=outpath, kernel=kernel)
 
     pool = Pool(processes=num_workers)
