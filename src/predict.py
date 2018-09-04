@@ -120,7 +120,8 @@ def main(argv):
         out = Path(outpath)
         fname = dxa.name + '.log'
         logfile = out/fname
-        logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(list(modelfiles.values())))
+        models = "\n".join([modelfiles[key] for key in mods])
+        logfile.write_text(str(date.today()) + "\nModel:\n" + models)
 
     print("*** FINISHED ***")
 
