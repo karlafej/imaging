@@ -13,11 +13,13 @@ import nn.unet as unet
 from nn.test_callbacks import PredictionsSaverCallback
 from data.fetcher import DatasetFetcher
 from data.dataset import TestImageDataset
-from data.export import create_csv, create_dirs, export_images
+from data.export import create_csv, create_dirs, export_images, get_DXA_lst
 import img.transformer as transformer
 from params import modelfiles, modelpath, datapath
+from helpers import print_help
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True # load big images
+
 
 def main(argv):
 
@@ -28,49 +30,60 @@ def main(argv):
     threshold = 0.5 # default 0.5
     #sample_size = None # Put None to work on full dataset
 
-
     # -- Optional parameters
     threads = 8
     use_cuda = torch.cuda.is_available()
 
-    # -- inpath from command line
-
-
     try:
-        opts, args = getopt.getopt(argv, "hi:o:sd", ["input=", "output="])
+        opts, args = getopt.getopt(argv, "hi:o:c:f:sdr", ["input=", "output=", "csv=", "rec"])
     except getopt.GetoptError:
         print ('argv[0] -i <inputpath> -s')
         sys.exit(2)
     stretched = False
-    dxa = False
     output = None
     rec = False
+    dirname = "DXA"
+    csvfile = None
+
     for opt, arg in opts:
         if opt == '-h':
-            print('argv[0] -i <inputpath>')
+            print_help(argv[0])
             sys.exit()
         elif opt in ("-i", "--input"):
             inpath = arg
+        elif opt in ("-c", "--csv"):
+            csvfile = arg
         elif opt in ("-s", "--str"):
             stretched = True
         elif opt in ("-d", "--dxa"):
             rec = True
         elif opt in ("-o", "--output"):
             output = arg
-
+        elif opt in ("-r", "--rec"):
+            dirname = "Rec"
+        elif opt == '-f':
+            dirname = arg
 
     if stretched:
         mods = ["st_start", "st_middle", "st_end"]
     else:
         mods = ["start", "middle", "male_end", "female_end"]
 
+    if rec:
+        dxa_lst, where = [inpath], 0
+    else:
+        dxa_lst, where = get_DXA_lst(inpath, dirname=dirname)
+
     if mods: # but mods are everytime!
-        CSV, dxa_lst, where = create_csv(inpath, datapath, mods=mods, rec=rec)
+        if csvfile is not None:
+            CSV = csvfile
+        else:
+            CSV = create_csv(datapath, DXA_lst=dxa_lst, mods=mods)
 
     if output is not None:
         predspath = output
     else:
-        predspath = inpath #TESTTESTTEST
+        predspath = inpath
 
     for dxa in dxa_lst:
         print("..." + dxa[-30:])
@@ -100,13 +113,15 @@ def main(argv):
 
                     pred_saver_cb = PredictionsSaverCallback(outpath=maskpath, threshold=threshold)
                     classifier.predict(test_loader, callbacks=[pred_saver_cb])
-
+        
+        dxa = Path(dxa)
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 
         out = Path(outpath)
-        fname = dxa.split('/')[-1] + '.log'
+        fname = dxa.name + '.log'
         logfile = out/fname
-        logfile.write_text(str(date.today()) + "\nModel:\n" + "\n".join(list(modelfiles.values())))
+        models = "\n".join([modelfiles[key] for key in mods])
+        logfile.write_text(str(date.today()) + "\nModel:\n" + models)
 
     print("*** FINISHED ***")
 

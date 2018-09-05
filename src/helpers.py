@@ -1,6 +1,7 @@
 import time
 import os
 import datetime
+from textwrap import dedent
 
 
 def st_time(show_func_name=True):
@@ -53,3 +54,29 @@ def get_model_timestamp():
     """
     ts = time.time()
     return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%Hh%M')
+
+def print_help(arg_name):
+    hlp = f"""\
+        {arg_name} -i <inputpath> -o <outputpath> -c <csvfile> -sdr
+        Options:
+        -i --input "path_to input_directory" 
+        Specify the input directory (screen/animal/reconstruction)
+        name of the reconstruction folder should contain a special string:
+        default is 'DXA' but ic can be changed by -r or -f options
+        
+        -r --rec 
+        Use 'Rec' as a special string indicating the reconstruction folder
+
+        -f "special_string"
+        Specify the string indicating te reconstruction folder
+
+        -d --dxa
+        The input folder is the reconstruction folder regardless of its name
+
+        -s
+        Use models for mice with stretched legs
+
+        -c --csv "path_to_csv"
+        Specify path to csv file with list of images to process
+    """
+    print(dedent(hlp))
