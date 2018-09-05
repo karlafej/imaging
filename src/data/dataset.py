@@ -1,6 +1,7 @@
 import numpy as np
 import torch.utils.data as data
 from PIL import Image
+from pathlib import Path
 
 import img.transformer as transformer
 
@@ -96,7 +97,7 @@ class TestImageDataset(data.Dataset):
             img = transformer.center_cropping_resize(img, self.img_resize)
             img = np.asarray(img.convert("RGB"), dtype=np.float32)
             img = transformer.image_to_tensor(img)
-        return img, img_path.split("/")[-1]
+        return img, Path(img_path).name
 
     def __len__(self):
         return len(self.X_train)

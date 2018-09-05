@@ -93,9 +93,9 @@ def main(argv):
             for part in mods:
 
                 modelfile = modelfiles[part]
-                ds_fetcher = DatasetFetcher()
-                ds_fetcher.get_dataset(data_path=dxa, csv=CSV, prod=True)
-                full_x_test = ds_fetcher.get_test_files(sample_size=None, part=part, prod=True)
+                ds_fetcher = DatasetFetcher(part=part)
+                ds_fetcher.get_dataset(data_path=dxa, csv=CSV, predicting=True)
+                full_x_test = ds_fetcher.get_test_files(sample_size=None, predicting=True)
                 if full_x_test.size != 0:
                     print(part)
                     img_resize_centercrop = transformer.get_center_crop_size(full_x_test[0],
@@ -113,7 +113,7 @@ def main(argv):
 
                     pred_saver_cb = PredictionsSaverCallback(outpath=maskpath, threshold=threshold)
                     classifier.predict(test_loader, callbacks=[pred_saver_cb])
-        
+
         dxa = Path(dxa)
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 

@@ -16,8 +16,6 @@ from nn.train_callbacks import TensorboardVisualizerCallback, TensorboardLoggerC
 from nn.test_callbacks import PredictionsSaverCallback
 from params import *
 
-
-
 def main(part=None):
     # Clear log dir first
     helpers.clear_logs_folder()
@@ -28,26 +26,30 @@ def main(part=None):
     #epochs = 4
     threshold = 0.5 # default 0.5
     sample_size = None # Put None to work on full dataset
-    if part:
-        modelfile = modelfiles[part]
 
     prefix = ""
+
+    try: 
+        modelfiles
+    except NameError:
+        modelfiles = None
+
     if part:
         prefix = part + "_"
-
+        if modelfiles:
+            modelfile = modelfiles.get(part)
 
     # -- Optional parameters
     threads = 10
     use_cuda = torch.cuda.is_available()
 
     # Download the datasets
-    ds_fetcher = DatasetFetcher()
+    ds_fetcher = DatasetFetcher(part=part)
     ds_fetcher.get_dataset()
 
     # Get the path to the files for the neural net
-    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size,
-                                                                    part=part)
-    full_x_test = ds_fetcher.get_test_files(sample_size=None, part=part)
+    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size)
+    full_x_test = ds_fetcher.get_test_files(sample_size=None)
 
     # -- Computed parameters
     # Get the original images size (assuming they are all the same size)

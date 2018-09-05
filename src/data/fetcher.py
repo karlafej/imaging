@@ -8,7 +8,7 @@ from params import datapath
 
 
 class DatasetFetcher:
-    def __init__(self):
+    def __init__(self, part=None):
         """
             A tool used to automatically download, check, split and get
             relevant information on the dataset
@@ -24,8 +24,9 @@ class DatasetFetcher:
         self.val_masks_data = None
         self.val_files = None
         self.val_masks_files = None
+        self.part = part
 
-    def get_dataset(self, data_path=datapath, prod=False, csv=None):
+    def get_dataset(self, data_path=datapath, predicting=False, csv=None):
         """
         Downloads the dataset and return the input paths
         Args:
@@ -38,22 +39,20 @@ class DatasetFetcher:
             list: [train_data, test_data, train_masks_data]
 
         """
-        if prod & (csv is not None):
-            destination_path = os.path.abspath(data_path)
+        destination_path = os.path.abspath(data_path)
+
+        if predicting and (csv is not None):
             self.test_data = destination_path
             self.csv = pd.read_csv(csv)
 
         else:
             #script_dir = os.path.dirname(os.path.abspath(__file__))
-            destination_path = os.path.abspath(data_path)
-            prefix = ""
 
-            datasets_path = [destination_path + "/train" + prefix,
+            datasets_path = [destination_path + "/train",
                              destination_path + "/train_masks",
-                             destination_path + "/val" + prefix,
-                             destination_path + "/val_masks" + prefix,
-                             destination_path + "/test" + prefix,
-                             destination_path + "/data.csv"
+                             destination_path + "/val",
+                             destination_path + "/val_masks",
+                             destination_path + "/test"
                             ]
             is_datasets_present = True
 
@@ -77,8 +76,13 @@ class DatasetFetcher:
             self.train_masks_files = sorted(os.listdir(self.train_masks_data))
             self.val_files = sorted(os.listdir(self.val_data))
             self.val_masks_files = sorted(os.listdir(self.val_masks_data))
-            self.csv = pd.read_csv(datasets_path[5])
-            return datasets_path
+
+            if self.part:
+                datasets_path.append(destination_path + "/data.csv")
+                if Path(datasets_path[5]).is_file is False:
+                    print("Missing csv")
+                self.csv = pd.read_csv(datasets_path[5])
+
 
     def get_image_files(self, image_id, test_file=False, val_file=False, get_mask=False):
         if get_mask & (not val_file):
@@ -116,7 +120,7 @@ class DatasetFetcher:
         img = Image.open(image)
         return img.size
 
-    def get_train_files(self, sample_size=None, part=None):
+    def get_train_files(self, sample_size=None):
         """
 
         Args:
@@ -130,17 +134,16 @@ class DatasetFetcher:
                 [train_data, train_masks_data, valid_data, valid_masks_data]
         """
 
-        if part:
-            train_ids = list(self.csv[(self.csv["ds"] == "train") & (self.csv["split"] == part)]["img"].str.split(".").str[0])
-            val_ids = list(self.csv[(self.csv["ds"] == "val") & (self.csv["split"] == part)]["img"].str.split(".").str[0])
+        if self.part:
+            train_ids = list(self.csv[(self.csv["ds"] == "train") & \
+                (self.csv["split"] == self.part)]["img"].str.split(".").str[0])
+            val_ids = list(self.csv[(self.csv["ds"] == "val") & \
+                (self.csv["split"] == self.part)]["img"].str.split(".").str[0])
         # the val column is redundant... could be found from self.val_files
         # list(set(self.val_files).intersection(list(self.csv[...]))
         else:
             train_ids = list(map(lambda img: img.split(".")[0], self.train_files))
             val_ids = list(map(lambda img: img.split(".")[0], self.val_files))
-            #train_ids = list(self.csv[(self.csv["ds"] == "train")]["img"].str.split(".").str[0])
-            #val_ids = list(self.csv[(self.csv["ds"] == "val")]["img"].str.split(".").str[0])
-      
 
         if sample_size:
             rnd = np.random.choice(train_ids, int(len(train_ids) * sample_size))
@@ -166,19 +169,20 @@ class DatasetFetcher:
         return [np.array(train_ret).ravel(), np.array(train_masks_ret).ravel(),
                 np.array(valid_ret).ravel(), np.array(valid_masks_ret).ravel()]
 
-    def get_test_files(self, sample_size, part=None, prod=False):
-        self.csv["pathlb"] = self.csv["path"].apply(lambda p: Path(p))
-        path_now = Path(self.test_data)
-        if prod & (part is not None):
+    def get_test_files(self, sample_size, predicting=False):
+        if predicting:
+            self.csv["pathlb"] = self.csv["path"].apply(Path)
+            path_now = Path(self.test_data)
+            if self.part:
+                test_files = list(self.csv[(self.csv["ds"] == "test") &
+                                           (self.csv["pathlb"] == path_now) &
+                                           (self.csv["split"] == self.part)]["img"])
+            else:
+                test_files = list(self.csv[(self.csv["ds"] == "test") &
+                                           (self.csv["pathlb"] == path_now)]["img"])
+        elif self.part:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                       (self.csv["pathlb"] == path_now) &
-                                       (self.csv["split"] == part)]["img"])  
-        elif prod:
-            test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                       (self.csv["pathlb"] == path_now)]["img"])
-        elif part:
-            test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                       (self.csv["split"] == part)]["img"])
+                                       (self.csv["split"] == self.part)]["img"])
         else:
             test_files = self.test_files
 
@@ -187,7 +191,8 @@ class DatasetFetcher:
             test_files = rnd.ravel()
 
         ret = [None] * len(test_files)
+        test_path = Path(self.test_data)
         for i, file in enumerate(test_files):
-            ret[i] = self.test_data + "/" + file
+            ret[i] = str(test_path/file)
 
         return np.array(ret)
