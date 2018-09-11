@@ -15,39 +15,29 @@ def folders_in(path_to_parent):
     '''
     list subfolders
     '''
-    dir_path = Path(path_to_parent)
-    if dir_path.is_dir():
-        folders = list(str(x) for x in dir_path.iterdir() if x.is_dir())
+    if path_to_parent.is_dir():
+        folders = list(str(x) for x in path_to_parent.iterdir() if x.is_dir())
     else:
         folders = []
     return folders
 
-def get_DXA_lst(path_to_parent, dirname="DXA"):
+def get_DXA_lst(path_to_parent):
     '''
     find all folders to process
 
     returns folders' names and location flag
     '''
     DXA_lst = []
-    if dirname in path_to_parent: #DXA
-        DXA_lst.append(path_to_parent)
-        where = -0
-    else:
-        folders = folders_in(path_to_parent)
-        for folder in folders:
-            if dirname in folder:   #Mouse
-                DXA_lst.append(folder)
-                where = -1
-    if not DXA_lst: # Mice !takes several minutes on primus
-        for folder in folders:
-            subfolders = folders_in(folder)
-            for subfolder in subfolders:
-                if dirname in subfolder:
-                    DXA_lst.append(subfolder)
-                    where = -2
-    if not DXA_lst:
-        DXA_lst.append(path_to_parent)
-        where = 0
+    path_to_parent = Path(path_to_parent)
+    folders = folders_in(path_to_parent)
+    if not folders: #mouse
+        file_lst = path_to_parent.iterdir() # how much time does it take?
+        if any(fname.suffix == '.bmp' for fname in file_lst):
+            DXA_lst.append(path_to_parent)
+            where = 0
+    else: #cohort
+        DXA_lst = folders # should check files
+        where = -1
 
     return DXA_lst, where
 
@@ -108,12 +98,8 @@ def create_csv(datapath, DXA_lst, mods=None):
         except ValueError:
             start = tmpdf['number'].min()
             n_st = (1000 - start) if start < 1000 else 0
-        print(Path(dxa).name, "- start at image number: ", start) 
+        print(Path(dxa).name, "- start at image number: ", start)
         print("First image:", filename)
-        tmpdf = pd.DataFrame()
-        tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
-        tmpdf['path'] = dxa
-        tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
         tmpdf = tmpdf.loc[tmpdf['number'] >= start]
         tmpdf.dropna(inplace=True)
         if mods is not None:
