@@ -41,8 +41,6 @@ def main(argv):
         sys.exit(2)
     stretched = False
     output = None
-    rec = False
-    dirname = "DXA"
     csvfile = None
 
     for opt, arg in opts:
@@ -55,24 +53,15 @@ def main(argv):
             csvfile = arg
         elif opt in ("-s", "--str"):
             stretched = True
-        elif opt in ("-d", "--dxa"):
-            rec = True
         elif opt in ("-o", "--output"):
             output = arg
-        elif opt in ("-r", "--rec"):
-            dirname = "Rec"
-        elif opt == '-f':
-            dirname = arg
 
     if stretched:
         mods = ["st_start", "st_middle", "st_end"]
     else:
         mods = ["start", "middle", "male_end", "female_end"]
 
-    if rec:
-        dxa_lst, where = [inpath], 0
-    else:
-        dxa_lst, where = get_DXA_lst(inpath, dirname=dirname)
+    dxa_lst, where = get_DXA_lst(inpath)
 
     if mods: # but mods are everytime!
         if csvfile is not None:
@@ -113,7 +102,7 @@ def main(argv):
 
                     pred_saver_cb = PredictionsSaverCallback(outpath=maskpath, threshold=threshold)
                     classifier.predict(test_loader, callbacks=[pred_saver_cb])
-        
+
         dxa = Path(dxa)
         export_images(imgpath=dxa, maskpath=maskpath, outpath=outpath, num_workers=threads)
 

@@ -140,7 +140,7 @@ class DatasetFetcher:
             val_ids = list(map(lambda img: img.split(".")[0], self.val_files))
             #train_ids = list(self.csv[(self.csv["ds"] == "train")]["img"].str.split(".").str[0])
             #val_ids = list(self.csv[(self.csv["ds"] == "val")]["img"].str.split(".").str[0])
-      
+
 
         if sample_size:
             rnd = np.random.choice(train_ids, int(len(train_ids) * sample_size))
@@ -172,7 +172,7 @@ class DatasetFetcher:
         if prod & (part is not None):
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["pathlb"] == path_now) &
-                                       (self.csv["split"] == part)]["img"])  
+                                       (self.csv["split"] == part)]["img"])
         elif prod:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["pathlb"] == path_now)]["img"])
