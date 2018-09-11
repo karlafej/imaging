@@ -110,10 +110,6 @@ def create_csv(datapath, DXA_lst, mods=None):
             n_st = (1000 - start) if start < 1000 else 0
         print(Path(dxa).name, "- start at image number: ", start) 
         print("First image:", filename)
-        tmpdf = pd.DataFrame()
-        tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
-        tmpdf['path'] = dxa
-        tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
         tmpdf = tmpdf.loc[tmpdf['number'] >= start]
         tmpdf.dropna(inplace=True)
         if mods is not None:
