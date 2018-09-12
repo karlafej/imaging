@@ -64,6 +64,7 @@ def main(argv):
         elif opt == '-f':
             dirname = arg
 
+
     if stretched:
         mods = ["st_start", "st_middle", "st_end"]
     else:
