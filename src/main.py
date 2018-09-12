@@ -4,6 +4,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True # load big images
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
+from pathlib import Path
 
 import helpers
 import img.augmentation as aug
@@ -29,7 +30,7 @@ def main(part=None):
 
     prefix = ""
 
-    try: 
+    try:
         modelfiles = par.modelfiles
     except NameError as e:
         print(e)
@@ -67,7 +68,7 @@ def main(part=None):
                                         verbose=True)
 
     # Testing callbacks
-    pred_saver_cb = PredictionsSaverCallback(outpath=par.predspath, threshold=threshold)
+    pred_saver_cb = PredictionsSaverCallback(outpath=Path(par.predspath), threshold=threshold)
 
     # Define our neural net architecture
     net = unet.UNet1024((3, *img_resize_centercrop))

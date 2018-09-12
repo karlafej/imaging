@@ -8,7 +8,7 @@ mods = ["start", "middle", "male_end", "female_end"] #None
 #mods = ["male_end"]
 #mods = ["female_end"]
 epochs = 6
-modelfiles = {'middle': "model_middle_2018-08-03_18h29", 
+modelfiles = {'middle': "model_middle_2018-08-03_18h29",
               'start': "model_start_2018-08-03_16h30",
               'end': "model_end_2018-04-04_22h08",
               'female_end': "model_female_end_2018-08-06_16h40",
