@@ -25,4 +25,4 @@ class PredictionsSaverCallback(Callback):
             mask = pred > self.threshold
             mask = np.array(mask, dtype=np.uint8)
             cv2.imwrite(img_name, mask)
-        
+
