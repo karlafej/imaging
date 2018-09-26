@@ -17,6 +17,6 @@ modelfiles = {'middle': "model_middle_2018-09-25_19h18",
               'st_start': "model_st_start_2018-09-26_08h08",
               'st_middle': "model_st_middle_2018-09-26_08h34",
               'st_end': "model_st_end_2018-04-27_02h38",
-              'st_female_end': "model_st_end_2018-04-27_02h38"
+              'st_female_end': "model_st_end_2018-04-27_02h38",
               'st_male_end' : "model_st_male_end_2018-09-26_10h53"}
 

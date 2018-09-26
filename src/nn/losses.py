@@ -1,26 +1,27 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class BCELoss2d(nn.Module):
-    def __init__(self, weight=None, size_average=True):
+    def __init__(self, weight=None, reduction='elementwise_mean'):
         super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCELoss(weight, size_average)
+        self.bce_loss = nn.BCELoss(weight, reduction='elementwise_mean')
 
     def forward(self, logits, targets):
-        probs = F.sigmoid(logits)
+        probs = torch.sigmoid(logits)
         probs_flat = probs.view(-1)
         targets_flat = targets.view(-1)
         return self.bce_loss(probs_flat, targets_flat)
 
 
 class SoftDiceLoss(nn.Module):
-    def __init__(self, weight=None, size_average=True):
+    def __init__(self, weight=None, reduction='elementwise_mean'):
         super(SoftDiceLoss, self).__init__()
 
     def forward(self, logits, targets):
         num = targets.size(0)
-        probs = F.sigmoid(logits)
+        probs = torch.sigmoid(logits)
         m1 = probs.view(num, -1)
         m2 = targets.view(num, -1)
         intersection = (m1 * m2)
