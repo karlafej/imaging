@@ -8,7 +8,11 @@ predspath = "/home/fejfark/PRIMUS/data/18_lab/karla/imaging/dl/ppp/"
 mods = ["st_male_end"]
 #mods = ["male_end"]
 #mods = ["female_end"]
+<<<<<<< HEAD
 epochs = 12
+=======
+epochs = 6
+>>>>>>> 0b9ffe85d4f83cb19b9c0b0c720a2db672984901
 modelfiles = {'middle': "model_middle_2018-08-03_18h29",
               'start': "model_start_2018-08-03_16h30",
               'end': "model_end_2018-04-04_22h08",
