@@ -102,7 +102,7 @@ def create_csv(datapath, DXA_lst, mods=None):
         print("First image:", filename)
         tmpdf = tmpdf.loc[tmpdf['number'] >= start]
         tmpdf.dropna(inplace=True)
-        if mods is not None:
+        if mods:
             if mods[0].startswith("st_"):
                 tmpdf['split'] = tmpdf['number'].apply(mouse_part_st)
                 #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"

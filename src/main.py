@@ -4,19 +4,18 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True # load big images
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
+from pathlib import Path
 
 import helpers
 import img.augmentation as aug
 import img.transformer as transformer
+import params as par
 from data.fetcher import DatasetFetcher
 from data.dataset import TrainImageDataset, TestImageDataset
 import nn.classifier
 import nn.unet as unet
 from nn.train_callbacks import TensorboardVisualizerCallback, TensorboardLoggerCallback, ModelSaverCallback
 from nn.test_callbacks import PredictionsSaverCallback
-from params import *
-
-
 
 def main(part=None):
     # Clear log dir first
@@ -28,26 +27,33 @@ def main(part=None):
     #epochs = 4
     threshold = 0.5 # default 0.5
     sample_size = None # Put None to work on full dataset
-    if part:
-        modelfile = modelfiles[part]
 
     prefix = ""
+
+    try:
+        modelfiles = par.modelfiles
+    except NameError as e:
+        print(e)
+        modelfiles = None
+
     if part:
         prefix = part + "_"
-
+        if modelfiles:
+            modelfile = modelfiles.get(part)
+    else:
+        modelfile = None
 
     # -- Optional parameters
     threads = 10
     use_cuda = torch.cuda.is_available()
 
     # Download the datasets
-    ds_fetcher = DatasetFetcher()
+    ds_fetcher = DatasetFetcher(part=part)
     ds_fetcher.get_dataset()
 
     # Get the path to the files for the neural net
-    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size,
-                                                                    part=part)
-    full_x_test = ds_fetcher.get_test_files(sample_size=None, part=part)
+    X_train, y_train, X_valid, y_valid = ds_fetcher.get_train_files(sample_size=sample_size)
+    full_x_test = ds_fetcher.get_test_files(sample_size=None)
 
     # -- Computed parameters
     # Get the original images size (assuming they are all the same size)
@@ -56,17 +62,17 @@ def main(part=None):
     ### TO DO: different image sizes ###
     img_resize_centercrop = transformer.get_center_crop_size(X_train[0], img_resize)
     # Training callbacks
-    tb_viz_cb = TensorboardVisualizerCallback(tb_viz_path)
-    tb_logs_cb = TensorboardLoggerCallback(tb_logs_path)
-    model_saver_cb = ModelSaverCallback(modelpath + "model_" + prefix + helpers.get_model_timestamp(),
+    tb_viz_cb = TensorboardVisualizerCallback(par.tb_viz_path)
+    tb_logs_cb = TensorboardLoggerCallback(par.tb_logs_path)
+    model_saver_cb = ModelSaverCallback(par.modelpath + "model_" + prefix + helpers.get_model_timestamp(),
                                         verbose=True)
 
     # Testing callbacks
-    pred_saver_cb = PredictionsSaverCallback(outpath=predspath, threshold=threshold)
+    pred_saver_cb = PredictionsSaverCallback(outpath=Path(par.predspath), threshold=threshold)
 
     # Define our neural net architecture
     net = unet.UNet1024((3, *img_resize_centercrop))
-    classifier = nn.classifier.ImgClassifier(net, epochs)
+    classifier = nn.classifier.ImgClassifier(net, par.epochs)
 
     train_ds = TrainImageDataset(X_train, y_train, img_resize, X_transform=aug.augment_img)
     train_loader = DataLoader(train_ds, batch_size,
@@ -84,10 +90,10 @@ def main(part=None):
           .format(len(train_loader.dataset), len(valid_loader.dataset)))
 
     if modelfile:
-        classifier.restore_model("".join([modelpath, modelfile]))
+        classifier.restore_model("".join([par.modelpath, modelfile]))
         print(f'Restoring model {modelfile}')
 
-    classifier.train(train_loader, valid_loader, epochs,
+    classifier.train(train_loader, valid_loader, par.epochs,
                      callbacks=[tb_viz_cb, tb_logs_cb, model_saver_cb])
 
     test_ds = TestImageDataset(full_x_test, img_resize)
@@ -101,8 +107,8 @@ def main(part=None):
 
 
 if __name__ == "__main__":
-    if mods:
-        for mpart in mods:
+    if par.mods:
+        for mpart in par.mods:
             print("Using {} part." .format(mpart))
             main(part=mpart)
     else:

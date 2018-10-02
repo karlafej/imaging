@@ -63,6 +63,7 @@ class TensorboardVisualizerCallback(Callback):
         results[:, 0:W] = image
         results[:, W:2 * W] = p
         results[:, 2 * W:3 * W] = masked_img
+        results = np.transpose(results, (2, 1, 0))
         return results
 
     def __call__(self, *args, **kwargs):
@@ -84,7 +85,7 @@ class TensorboardVisualizerCallback(Callback):
                 image = scipy.imresize(image, (256, 256))
                 target_mask = scipy.imresize(target_mask, (256, 256))
                 pred_mask = scipy.imresize(pred_mask, (256, 256))
-
+            
             expected_result = self._get_mask_representation(image, target_mask)
             pred_result = self._get_mask_representation(image, pred_mask)
             writer.add_image("Epoch_" + str(epoch_id) + '-Image_' + str(i + 1) + '-Expected', expected_result, epoch_id)
