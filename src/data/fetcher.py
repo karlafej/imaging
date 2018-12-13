@@ -171,15 +171,18 @@ class DatasetFetcher:
 
     def get_test_files(self, sample_size, predicting=False):
         if predicting:
-            self.csv["pathlb"] = self.csv["path"].apply(Path)
-            path_now = Path(self.test_data)
-            if self.part:
-                test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                           (self.csv["pathlb"] == path_now) &
-                                           (self.csv["split"] == self.part)]["img"])
+            if len(self.csv) != 0:
+                self.csv["pathlb"] = self.csv["path"].apply(Path)
+                path_now = Path(self.test_data)
+                if self.part:
+                    test_files = list(self.csv[(self.csv["ds"] == "test") &
+                                               (self.csv["pathlb"] == path_now) &
+                                               (self.csv["split"] == self.part)]["img"])
+                else:
+                    test_files = list(self.csv[(self.csv["ds"] == "test") &
+                                               (self.csv["pathlb"] == path_now)]["img"])
             else:
-                test_files = list(self.csv[(self.csv["ds"] == "test") &
-                                           (self.csv["pathlb"] == path_now)]["img"])
+                test_files = []
         elif self.part:
             test_files = list(self.csv[(self.csv["ds"] == "test") &
                                        (self.csv["split"] == self.part)]["img"])

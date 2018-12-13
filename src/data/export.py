@@ -97,33 +97,36 @@ def create_csv(datapath, DXA_lst, mods=None):
         tmpdf['img'] = [img for img in os.listdir(dxa) if img.endswith('bmp')]
         tmpdf['path'] = dxa
         tmpdf['number'] = [int(m.group(1)) if m else None for m in (pattern.search(file[:-4]) for file in tmpdf['img'])]
-        # call an external script to find the first image:
-        inp = "".join([' --input="', dxa, '"'])
-        cmd_line = cmd + inp
-        proc = subprocess.run(cmd_line, stdout=subprocess.PIPE, shell=True)
-        filename = (str(proc.stdout, 'utf-8')).strip()
-        try:
-            start = int(filename[-8:-4])
-            n_st = 400
-        except ValueError:
-            start = tmpdf['number'].min()
-            n_st = (1000 - start) if start < 1000 else 0
-        print(Path(dxa).name, "- start at image number: ", start) 
-        print("First image:", filename)
-        tmpdf = tmpdf.loc[tmpdf['number'] >= start]
-        tmpdf.dropna(inplace=True)
-        if mods:
-            if mods[0].startswith("st_"):
-                tmpdf['split'] = tmpdf['number'].apply(mouse_part_st)
-                #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
-                #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
-            else:
-                tmpdf['split'] = tmpdf['number'].apply(mouse_part,
-                                                       start=start+n_st,
-                                                       end=start+n_st+900)
-                tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
-                tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
-        df = pd.concat([df, tmpdf], sort=True)
+        if len(tmpdf)!=0:
+            # call an external script to find the first image:
+            inp = "".join([' --input="', dxa, '"'])
+            cmd_line = cmd + inp
+            proc = subprocess.run(cmd_line, stdout=subprocess.PIPE, shell=True)
+            filename = (str(proc.stdout, 'utf-8')).strip()
+            try:
+                start = int(filename[-8:-4])
+                n_st = 400
+            except ValueError:
+                start = tmpdf['number'].min()
+                n_st = (1000 - start) if start < 1000 else 0
+            print(Path(dxa).name, "- start at image number: ", start) 
+            print("First image:", filename)
+            tmpdf = tmpdf.loc[tmpdf['number'] >= start]
+            tmpdf.dropna(inplace=True)
+            if mods:
+                if mods[0].startswith("st_"):
+                    tmpdf['split'] = tmpdf['number'].apply(mouse_part_st)
+                    #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                    #tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
+                else:
+                    tmpdf['split'] = tmpdf['number'].apply(mouse_part,
+                                                           start=start+n_st,
+                                                           end=start+n_st+900)
+                    tmpdf.loc[((tmpdf['img'].str.contains('(?i)_M_')) & (tmpdf['split'] == "end")), 'split'] = "male_end"
+                    tmpdf.loc[((tmpdf['img'].str.contains('(?i)_F_')) & (tmpdf['split'] == "end")), 'split'] = "female_end"
+            df = pd.concat([df, tmpdf], sort=True)
+        else:
+            print("No images!")
 
     df['ds'] = "test"
     CSV = str(Path(datapath)/'predict_data.csv')
