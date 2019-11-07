@@ -88,9 +88,10 @@ def create_csv(datapath, DXA_lst, mods=None):
     df = pd.DataFrame(columns=("path", "img"))
     pattern = re.compile('.*?([0-9]+)$')
     scriptloc = str(Path(__file__).resolve().parent.parent.parent/"startend/startPosition.R")
+    modeloc = str(Path(__file__).resolve().parent.parent.parent/"startend/model.csv")
     cmd = ('Rscript '
            + scriptloc +
-           ' --mode="classify" --model="../startend/model.csv"'
+           ' --mode="classify" --model="' + modeloc + '"' +
            ' --p=0.3 --window=50 --paralell')
     for dxa in DXA_lst:
         tmpdf = pd.DataFrame()
@@ -109,7 +110,9 @@ def create_csv(datapath, DXA_lst, mods=None):
             except ValueError:
                 start = tmpdf['number'].min()
                 n_st = (1000 - start) if start < 1000 else 0
+                filename = tmpdf[tmpdf['number'] == start]['img'].values[0]
             print(Path(dxa).name, "- start at image number: ", start) 
+            filename = str(Path(dxa)/filename)
             print("First image:", filename)
             tmpdf = tmpdf.loc[tmpdf['number'] >= start]
             tmpdf.dropna(inplace=True)

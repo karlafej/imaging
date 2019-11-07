@@ -31,7 +31,7 @@ def main(argv):
     #sample_size = None # Put None to work on full dataset
 
     # -- Optional parameters
-    threads = 8
+    threads = 3
     use_cuda = torch.cuda.is_available()
 
     try:
@@ -64,6 +64,8 @@ def main(argv):
         elif opt == '-f':
             dirname = arg
 
+
+    print("Running :-)")
 
     if stretched:
         mods = ["st_start", "st_middle", "st_end"]
